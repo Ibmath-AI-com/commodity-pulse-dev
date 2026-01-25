@@ -12,6 +12,8 @@ import {
   X,
 } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 type ReportStatus = "Ready" | "Running" | "Failed";
 
 type ReportListItem = {

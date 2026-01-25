@@ -7,141 +7,6 @@ import { Printer, X } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-type TenderOut = {
-  tenderAction?: string;
-  tenderPredictedPrice?: number | null;
-  unit?: string;
-  confidence?: string;
-  rationale?: string;
-  signals?: { trend?: string; sentimentScore?: number };
-};
-
-type CaliBidRow = {
-  caliBidRangeFob?: string;
-  chanceToWin?: string;
-  marginRiskDec?: string;
-  assessment?: string;
-  implication?: string;
-  marginPerTon?: string;
-};
-
-type MultiReportItem = {
-  basisKey?: string;
-  basisLabel?: string;
-  tender?: TenderOut | null;
-  expectedSellingPrice?: string | null;
-  spotPricesText?: string | null;
-  notes?: string[];
-  caliTable?: CaliBidRow[];
-  news?: any;
-  evidence?: any[];
-  currency?: string;
-  riskLevel?: string;
-};
-
-type ReportPayload = {
-  generatedAt?: string;
-  commodity?: string;
-  basis?: string[];
-  futureDate?: string;
-  status?: string;
-
-  // ✅ NEW (per-basis base prices)
-  basePricesByBasis?: Record<string, string>;
-  basePrices?: Array<number | null>;
-
-  // legacy (older reports)
-  basePriceMode?: "auto" | "override" | string;
-  basePriceOverride?: number | null;
-
-  multiResults?: MultiReportItem[] | null;
-  activeBasis?: string | null;
-
-  // legacy single-basis
-  tender?: TenderOut | null;
-  predictedPrice?: number | null;
-  currency?: string;
-  riskLevel?: string;
-  expectedSellingPrice?: string | null;
-  spotPricesText?: string | null;
-  notes?: string[];
-  caliTable?: CaliBidRow[];
-};
-
-const BASES: Record<string, string> = {
-  vancouver: "Vancouver",
-  "middle-east": "Middle East",
-  iran: "Iran",
-  "black-sea": "Black Sea",
-  "baltic-sea": "Baltic Sea",
-  "us-gulf": "US Gulf",
-  mediterranean: "Mediterranean",
-};
-
-function basisLabel(v: string) {
-  return BASES[v] ?? v;
-}
-
-const REPORT_DATE_FMT = new Intl.DateTimeFormat("en-AU", {
-  year: "numeric",
-  month: "short",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Australia/Sydney",
-});
-
-function fmtReportDate(iso?: string) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : REPORT_DATE_FMT.format(d);
-}
-
-function decodeReportPayload(encoded: string): ReportPayload | null {
-  try {
-    const json = decodeURIComponent(escape(atob(encoded)));
-    return JSON.parse(json) as ReportPayload;
-  } catch {
-    return null;
-  }
-}
-
-function safeText(v: any) {
-  const s = String(v ?? "").trim();
-  return s ? s : "—";
-}
-
-function fmtMoney(n?: number | null, unit?: string | null) {
-  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
-  const u = safeText(unit ?? "");
-  return u && u !== "—" ? `${n} ${u}` : String(n);
-}
-
-function fmtBasePriceText(v: unknown) {
-  const s = String(v ?? "").trim();
-  if (!s) return "—";
-  const n = Number(s);
-  if (!Number.isFinite(n)) return "—";
-  return String(n);
-}
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-// Minimal “word-like” table tones: no gradients, compact, print-friendly
-function pillClass() {
-  return "inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700";
-}
-
-function kpiKey() {
-  return "text-[10px] font-semibold text-slate-500";
-}
-
-function kpiVal() {
-  return "mt-0.5 text-[12px] font-semibold text-slate-900";
-}
-
 export default function PredictionPrintPage() {
   const searchParams = useSearchParams();
   const k = searchParams.get("k") ?? "";
@@ -727,3 +592,140 @@ export default function PredictionPrintPage() {
     </>
   );
 }
+
+
+type TenderOut = {
+  tenderAction?: string;
+  tenderPredictedPrice?: number | null;
+  unit?: string;
+  confidence?: string;
+  rationale?: string;
+  signals?: { trend?: string; sentimentScore?: number };
+};
+
+type CaliBidRow = {
+  caliBidRangeFob?: string;
+  chanceToWin?: string;
+  marginRiskDec?: string;
+  assessment?: string;
+  implication?: string;
+  marginPerTon?: string;
+};
+
+type MultiReportItem = {
+  basisKey?: string;
+  basisLabel?: string;
+  tender?: TenderOut | null;
+  expectedSellingPrice?: string | null;
+  spotPricesText?: string | null;
+  notes?: string[];
+  caliTable?: CaliBidRow[];
+  news?: any;
+  evidence?: any[];
+  currency?: string;
+  riskLevel?: string;
+};
+
+type ReportPayload = {
+  generatedAt?: string;
+  commodity?: string;
+  basis?: string[];
+  futureDate?: string;
+  status?: string;
+
+  // ✅ NEW (per-basis base prices)
+  basePricesByBasis?: Record<string, string>;
+  basePrices?: Array<number | null>;
+
+  // legacy (older reports)
+  basePriceMode?: "auto" | "override" | string;
+  basePriceOverride?: number | null;
+
+  multiResults?: MultiReportItem[] | null;
+  activeBasis?: string | null;
+
+  // legacy single-basis
+  tender?: TenderOut | null;
+  predictedPrice?: number | null;
+  currency?: string;
+  riskLevel?: string;
+  expectedSellingPrice?: string | null;
+  spotPricesText?: string | null;
+  notes?: string[];
+  caliTable?: CaliBidRow[];
+};
+
+const BASES: Record<string, string> = {
+  vancouver: "Vancouver",
+  "middle-east": "Middle East",
+  iran: "Iran",
+  "black-sea": "Black Sea",
+  "baltic-sea": "Baltic Sea",
+  "us-gulf": "US Gulf",
+  mediterranean: "Mediterranean",
+};
+
+function basisLabel(v: string) {
+  return BASES[v] ?? v;
+}
+
+const REPORT_DATE_FMT = new Intl.DateTimeFormat("en-AU", {
+  year: "numeric",
+  month: "short",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Australia/Sydney",
+});
+
+function fmtReportDate(iso?: string) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? "—" : REPORT_DATE_FMT.format(d);
+}
+
+function decodeReportPayload(encoded: string): ReportPayload | null {
+  try {
+    const json = decodeURIComponent(escape(atob(encoded)));
+    return JSON.parse(json) as ReportPayload;
+  } catch {
+    return null;
+  }
+}
+
+function safeText(v: any) {
+  const s = String(v ?? "").trim();
+  return s ? s : "—";
+}
+
+function fmtMoney(n?: number | null, unit?: string | null) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+  const u = safeText(unit ?? "");
+  return u && u !== "—" ? `${n} ${u}` : String(n);
+}
+
+function fmtBasePriceText(v: unknown) {
+  const s = String(v ?? "").trim();
+  if (!s) return "—";
+  const n = Number(s);
+  if (!Number.isFinite(n)) return "—";
+  return String(n);
+}
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+// Minimal “word-like” table tones: no gradients, compact, print-friendly
+function pillClass() {
+  return "inline-flex items-center rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-700";
+}
+
+function kpiKey() {
+  return "text-[10px] font-semibold text-slate-500";
+}
+
+function kpiVal() {
+  return "mt-0.5 text-[12px] font-semibold text-slate-900";
+}
+

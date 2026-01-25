@@ -5,6 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Printer } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 type SummarySection = { section_title: string; content: string };
 
 type NormalizedReport = {
