@@ -27,275 +27,7 @@ import {
   TextAlignCenter,
 } from "lucide-react";
 
-type Status = "idle" | "loading" | "success" | "error";
-
-type Result = {
-  tenderPredictedPrice: number;
-  currency: string;
-  riskLevel: "Low" | "Medium" | "High";
-  notes: string[];
-  justification: Array<{
-    factor: string;
-    impact: "Up" | "Down" | "Risk";
-    confidence: "High" | "Medium" | "Low";
-    comment: string;
-  }>;
-};
-
-type NewsEvent = {
-  headline?: string;
-  impact_direction?: string;
-  importance_score?: number;
-  event_type?: string;
-  event_date?: string;
-  regions?: string[];
-  evidence_summary?: string;
-};
-
-type ShortTermSentiment = {
-  category?: "Positive" | "Neutral" | "Negative" | string;
-  score?: number;
-  rationale?: string;
-};
-
-type NewsBundle = {
-  shortTermSentiment?: ShortTermSentiment | null;
-  events?: NewsEvent[];
-};
-
-type CaliBidRow = {
-  caliBidRangeFob: string;
-  chanceToWin: string;
-  marginRiskDec: string;
-  assessment: string;
-  implication: string;
-  expectedSellingPrice: string;
-  spotPricesText: string;
-  marginPerTon: string;
-  supportingNews?: NewsEvent[];
-};
-
-type TenderOut = {
-  tenderAction: "BUY BID" | "SELL OFFER" | "PASS" | string;
-  tenderPredictedPrice: number | null;
-  unit: string;
-  confidence: "High" | "Medium" | "Low" | string;
-  rationale: string;
-  signals?: {
-    trend?: string;
-    sentimentScore?: number;
-  };
-};
-
-type N8nPayload = {
-  ok?: boolean;
-  commodity?: string;
-  basis?: string;
-  asof_date?: string;
-  expectedSellingPrice?: string;
-  spotPricesText?: string;
-  notes?: string[];
-  tender?: TenderOut;
-  caliBidTable?: CaliBidRow[];
-  news?: NewsBundle;
-  evidence?: NewsEvent[];
-};
-
-type ApiMultiResponse = {
-  ok: true;
-  commodity?: string;
-  futureDate?: string;
-  results: Array<{
-    basisKey: string;
-    basisLabel: string;
-    data: any;
-  }>;
-};
-
-type MultiItem = {
-  basisKey: string;
-  basisLabel: string;
-  bundle: N8nPayload;
-  result: Result;
-};
-
-
-function cx(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
-
-const LS_COMMODITY = "ai_commodity_selected";
-const LS_BASIS = "ai_basis_selected";
-const LS_BASE_PRICE = "ai_base_price_selected";
-
-function formatUnit(unit: string) {
-  const u = String(unit ?? "").trim();
-  if (!u) return "";
-  if (u.toLowerCase().includes("/t")) return `${u} • per ton`;
-  return u;
-}
-
-
-function RiskPill({ v }: { v: "Low" | "Medium" | "High" | "--" }) {
-  const cls =
-    v === "Low"
-      ? "badge-green"
-      : v === "Medium"
-      ? "badge-amber"
-      : v === "High"
-      ? "badge-rose"
-      : "bg-slate-500/10 text-slate-700 ring-1 ring-slate-200";
-  return (
-    <span className={cx("badge", cls)}>
-      {v}
-    </span>
-  );
-}
-
-function IconTag({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path
-        d="M4 10.5V5.5A1.5 1.5 0 0 1 5.5 4h5L20 13.5 13.5 20 4 10.5Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M8.2 8.2h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconCalendar({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path
-        d="M7 3v3M17 3v3M4 8h16M6 6h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconChevronDown({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconSpark({ className }: { className?: string }) {
-  return (
-    <svg className={cx("h-5 w-5", className)} viewBox="0 0 24 24" fill="none">
-      <path
-        d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function IconShield({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path
-        d="M12 22s8-3.5 8-10.5V6l-8-3-8 3v5.5C4 18.5 12 22 12 22Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M9 12.5l2 2 4-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function IconFileText({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path
-        d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M14 3v3h3" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M8 12h8M8 16h8M8 8h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function IconTable({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none">
-      <path
-        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path d="M4 10h16M8 4v18M16 4v18" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function badgeForAssessment(a: string) {
-  const v = (a || "").toLowerCase();
-  if (v.includes("acceptable") || v.includes("optimal")) return { Icon: Target, cls: "badge-green", label: a };
-  if (v.includes("attractive")) return { Icon: Target, cls: "badge-amber", label: a };
-  if (v.includes("recommended")) return { Icon: AlertTriangle, cls: "badge-amber", label: a };
-  if (v.includes("avoid") || v.includes("risky")) return { Icon: AlertTriangle, cls: "badge-rose", label: a };
-  return { Icon: Sparkles, cls: "badge-indigo", label: a || "—" };
-}
-
-function badgeForConfidence(c: string) {
-  const v = (c || "").toLowerCase();
-  if (v.includes("high")) return { Icon: ShieldCheck, cls: "badge-green", label: c || "—" };
-  if (v.includes("low")) return { Icon: AlertTriangle, cls: "badge-rose", label: c || "—" };
-  return { Icon: ShieldAlert, cls: "badge-amber", label: c || "—" };
-}
-
-function badgeForImpact(v: "Up" | "Down" | "Risk") {
-  if (v === "Up") return { Icon: TrendingUp, cls: "badge-green", label: "Up" };
-  if (v === "Down") return { Icon: TrendingDown, cls: "badge-rose", label: "Down" };
-  return { Icon: AlertTriangle, cls: "badge-amber", label: "Risk" };
-}
-
-function marginTone(text: string) {
-  const t = (text || "").trim();
-  if (t.includes("-")) return { Icon: TrendingDown, cls: "text-rose-700", value: t };
-  if (t.includes("+")) return { Icon: TrendingUp, cls: "text-emerald-700", value: t };
-  return { Icon: TrendingUp, cls: "text-slate-700", value: t || "—" };
-}
-
-// ---- Options ----
-const COMMODITIES = [
-  { value: "sulphur", label: "Sulphur" },
-  { value: "ethylene", label: "Ethylene" },
-  { value: "pygas", label: "Pygas" },
-  { value: "naphtha", label: "Naphtha" },
-  { value: "urea", label: "Urea" },
-];
-
-const BASES = [
-  { value: "vancouver", label: "Vancouver" },
-  { value: "middle-east", label: "Middle East" },
-  { value: "iran", label: "Iran" },
-  { value: "black-sea", label: "Black Sea" },
-  { value: "baltic-sea", label: "Baltic Sea" },
-  { value: "us-gulf", label: "US Gulf" },
-  { value: "mediterranean", label: "Mediterranean" },
-];
-
-function normalizeCommodity(input: string) {
-  const v = (input ?? "").trim().toLowerCase();
-  const hit = COMMODITIES.find((c) => c.value === v || c.label.toLowerCase() === v);
-  return hit ? hit.value : "sulphur";
-}
+export const dynamic = "force-dynamic";
 
 export default function PredictionPage() {
   const searchParams = useSearchParams();
@@ -1489,3 +1221,274 @@ export default function PredictionPage() {
 );
 
 }
+
+type Status = "idle" | "loading" | "success" | "error";
+
+type Result = {
+  tenderPredictedPrice: number;
+  currency: string;
+  riskLevel: "Low" | "Medium" | "High";
+  notes: string[];
+  justification: Array<{
+    factor: string;
+    impact: "Up" | "Down" | "Risk";
+    confidence: "High" | "Medium" | "Low";
+    comment: string;
+  }>;
+};
+
+type NewsEvent = {
+  headline?: string;
+  impact_direction?: string;
+  importance_score?: number;
+  event_type?: string;
+  event_date?: string;
+  regions?: string[];
+  evidence_summary?: string;
+};
+
+type ShortTermSentiment = {
+  category?: "Positive" | "Neutral" | "Negative" | string;
+  score?: number;
+  rationale?: string;
+};
+
+type NewsBundle = {
+  shortTermSentiment?: ShortTermSentiment | null;
+  events?: NewsEvent[];
+};
+
+type CaliBidRow = {
+  caliBidRangeFob: string;
+  chanceToWin: string;
+  marginRiskDec: string;
+  assessment: string;
+  implication: string;
+  expectedSellingPrice: string;
+  spotPricesText: string;
+  marginPerTon: string;
+  supportingNews?: NewsEvent[];
+};
+
+type TenderOut = {
+  tenderAction: "BUY BID" | "SELL OFFER" | "PASS" | string;
+  tenderPredictedPrice: number | null;
+  unit: string;
+  confidence: "High" | "Medium" | "Low" | string;
+  rationale: string;
+  signals?: {
+    trend?: string;
+    sentimentScore?: number;
+  };
+};
+
+type N8nPayload = {
+  ok?: boolean;
+  commodity?: string;
+  basis?: string;
+  asof_date?: string;
+  expectedSellingPrice?: string;
+  spotPricesText?: string;
+  notes?: string[];
+  tender?: TenderOut;
+  caliBidTable?: CaliBidRow[];
+  news?: NewsBundle;
+  evidence?: NewsEvent[];
+};
+
+type ApiMultiResponse = {
+  ok: true;
+  commodity?: string;
+  futureDate?: string;
+  results: Array<{
+    basisKey: string;
+    basisLabel: string;
+    data: any;
+  }>;
+};
+
+type MultiItem = {
+  basisKey: string;
+  basisLabel: string;
+  bundle: N8nPayload;
+  result: Result;
+};
+
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+const LS_COMMODITY = "ai_commodity_selected";
+const LS_BASIS = "ai_basis_selected";
+const LS_BASE_PRICE = "ai_base_price_selected";
+
+function formatUnit(unit: string) {
+  const u = String(unit ?? "").trim();
+  if (!u) return "";
+  if (u.toLowerCase().includes("/t")) return `${u} • per ton`;
+  return u;
+}
+
+
+function RiskPill({ v }: { v: "Low" | "Medium" | "High" | "--" }) {
+  const cls =
+    v === "Low"
+      ? "badge-green"
+      : v === "Medium"
+      ? "badge-amber"
+      : v === "High"
+      ? "badge-rose"
+      : "bg-slate-500/10 text-slate-700 ring-1 ring-slate-200";
+  return (
+    <span className={cx("badge", cls)}>
+      {v}
+    </span>
+  );
+}
+
+function IconTag({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M4 10.5V5.5A1.5 1.5 0 0 1 5.5 4h5L20 13.5 13.5 20 4 10.5Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M8.2 8.2h.01" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconCalendar({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M7 3v3M17 3v3M4 8h16M6 6h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconChevronDown({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconSpark({ className }: { className?: string }) {
+  return (
+    <svg className={cx("h-5 w-5", className)} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M13 2 3 14h7l-1 8 12-14h-7l-1-6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconShield({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M12 22s8-3.5 8-10.5V6l-8-3-8 3v5.5C4 18.5 12 22 12 22Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M9 12.5l2 2 4-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function IconFileText({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M7 3h7l3 3v15a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M14 3v3h3" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M8 12h8M8 16h8M8 8h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconTable({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none">
+      <path
+        d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path d="M4 10h16M8 4v18M16 4v18" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function badgeForAssessment(a: string) {
+  const v = (a || "").toLowerCase();
+  if (v.includes("acceptable") || v.includes("optimal")) return { Icon: Target, cls: "badge-green", label: a };
+  if (v.includes("attractive")) return { Icon: Target, cls: "badge-amber", label: a };
+  if (v.includes("recommended")) return { Icon: AlertTriangle, cls: "badge-amber", label: a };
+  if (v.includes("avoid") || v.includes("risky")) return { Icon: AlertTriangle, cls: "badge-rose", label: a };
+  return { Icon: Sparkles, cls: "badge-indigo", label: a || "—" };
+}
+
+function badgeForConfidence(c: string) {
+  const v = (c || "").toLowerCase();
+  if (v.includes("high")) return { Icon: ShieldCheck, cls: "badge-green", label: c || "—" };
+  if (v.includes("low")) return { Icon: AlertTriangle, cls: "badge-rose", label: c || "—" };
+  return { Icon: ShieldAlert, cls: "badge-amber", label: c || "—" };
+}
+
+function badgeForImpact(v: "Up" | "Down" | "Risk") {
+  if (v === "Up") return { Icon: TrendingUp, cls: "badge-green", label: "Up" };
+  if (v === "Down") return { Icon: TrendingDown, cls: "badge-rose", label: "Down" };
+  return { Icon: AlertTriangle, cls: "badge-amber", label: "Risk" };
+}
+
+function marginTone(text: string) {
+  const t = (text || "").trim();
+  if (t.includes("-")) return { Icon: TrendingDown, cls: "text-rose-700", value: t };
+  if (t.includes("+")) return { Icon: TrendingUp, cls: "text-emerald-700", value: t };
+  return { Icon: TrendingUp, cls: "text-slate-700", value: t || "—" };
+}
+
+// ---- Options ----
+const COMMODITIES = [
+  { value: "sulphur", label: "Sulphur" },
+  { value: "ethylene", label: "Ethylene" },
+  { value: "pygas", label: "Pygas" },
+  { value: "naphtha", label: "Naphtha" },
+  { value: "urea", label: "Urea" },
+];
+
+const BASES = [
+  { value: "vancouver", label: "Vancouver" },
+  { value: "middle-east", label: "Middle East" },
+  { value: "iran", label: "Iran" },
+  { value: "black-sea", label: "Black Sea" },
+  { value: "baltic-sea", label: "Baltic Sea" },
+  { value: "us-gulf", label: "US Gulf" },
+  { value: "mediterranean", label: "Mediterranean" },
+];
+
+function normalizeCommodity(input: string) {
+  const v = (input ?? "").trim().toLowerCase();
+  const hit = COMMODITIES.find((c) => c.value === v || c.label.toLowerCase() === v);
+  return hit ? hit.value : "sulphur";
+}
+
