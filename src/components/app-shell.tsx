@@ -219,7 +219,7 @@ export function AppShell({ title, children }: { title?: string; children: React.
                 <span className="tt-logoMark" aria-hidden="true">
                   C
                 </span>
-                <span className="tt-companyRest pl-1">Commodity Pulse</span>
+                <span className="tt-companyRest pl-1">Cali Commodity Pulse</span>
               </div>
             </Link>
 

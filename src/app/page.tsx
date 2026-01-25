@@ -1,6 +1,8 @@
 //aicommodity\src\app\page.tsx
 "use client";
 
+
+import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LoginBackground from "@/components/LoginBackground";
@@ -101,15 +103,26 @@ export default function HomePage() {
         <div className="login-card-wrapper">
           <div className="glow-border" />
           <div className="login-card">
-            <div className="header">
-              <h2 className="tt-login-companyRest pl-1">Commodity Pulse</h2>
+            <div className="login-card-head">
+              <Image
+                src="/logo.png"
+                alt="Commodity AI logo"
+                width={220}
+                height={110}
+                className="login-logo"
+                priority
+              />
+
+              <div className="header">
+                <h2 className="tt-login-companyRest">Cali Commodity Pulse</h2>
+              </div>
             </div>
 
             <form
               className="form"
               onSubmit={(ev) => {
                 ev.preventDefault();
-                console.log("FORM SUBMIT", { isValid, busy }); // ✅ proof submit fires
+                console.log("FORM SUBMIT", { isValid, busy }); 
                 if (!isValid || busy) return;
                 void handleAuth();
               }}
@@ -168,7 +181,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <p className="footer">Powered by Advanced Agentic Coding</p>
+        <p className="footer">Powered by Cali Agricultural </p>
       </div>
     </div>
   );

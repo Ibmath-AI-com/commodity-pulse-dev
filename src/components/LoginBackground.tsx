@@ -146,17 +146,6 @@ sparkle.className = "sparkle";
           <div key={i} className="bar" />
         ))}
       </div>
-
-      <div className="bg-logo" aria-hidden="true">
-        <Image
-          src="/logo.png"
-          alt="Commodity AI logo"
-          width={220}
-          height={110}
-          className="object-contain"
-          priority
-        />
-      </div>
      
     </div>
   );
