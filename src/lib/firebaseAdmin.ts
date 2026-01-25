@@ -1,20 +1,10 @@
 import "server-only";
 import admin from "firebase-admin";
-import fs from "fs";
 
 function init() {
   if (admin.apps.length) return admin.app();
 
-  const path = process.env.FIREBASE_ADMIN_KEY_PATH;
   const b64 = process.env.FIREBASE_ADMIN_JSON_BASE64;
-
-  if (path) {
-    const json = JSON.parse(fs.readFileSync(path, "utf8"));
-    return admin.initializeApp({
-      credential: admin.credential.cert(json),
-    });
-  }
-
   if (b64) {
     const jsonStr = Buffer.from(b64, "base64").toString("utf8");
     const json = JSON.parse(jsonStr);
@@ -23,7 +13,18 @@ function init() {
     });
   }
 
-  throw new Error("Missing FIREBASE_ADMIN_KEY_PATH or FIREBASE_ADMIN_JSON_BASE64");
+  const path = process.env.FIREBASE_ADMIN_KEY_PATH;
+  if (path) {
+    // Local dev fallback only
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const fs = require("fs") as typeof import("fs");
+    const json = JSON.parse(fs.readFileSync(path, "utf8"));
+    return admin.initializeApp({
+      credential: admin.credential.cert(json),
+    });
+  }
+
+  throw new Error("Missing FIREBASE_ADMIN_JSON_BASE64 (recommended) or FIREBASE_ADMIN_KEY_PATH");
 }
 
 export const adminApp = init();
