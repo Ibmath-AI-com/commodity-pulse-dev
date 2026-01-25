@@ -169,6 +169,15 @@ export default function UploadPage() {
     else setBusyPrices(v);
   }
 
+   function busyLabel(mode: Mode) {
+    const b = getBusy(mode);
+    if (b === "init") return "Preparing…";
+    if (b === "uploading") return "Uploading…";
+    if (b === "verifying") return "Working…";
+    if (b === "listing") return "Refreshing…";
+    return "";
+  }
+
   const [reportFile, setReportFile] = useState<File | null>(null);
   const [pricesFile, setPricesFile] = useState<File | null>(null);
 
@@ -202,9 +211,6 @@ export default function UploadPage() {
 
   const reportInputRef = useRef<HTMLInputElement | null>(null);
   const pricesInputRef = useRef<HTMLInputElement | null>(null);
-
-  const [dragReport, setDragReport] = useState(false);
-  const [dragPrices, setDragPrices] = useState(false);
 
   const searchParams = useSearchParams();
 
@@ -698,7 +704,7 @@ useEffect(() => {
                             onClick={() => uploadFile("report")}
                             disabled={busyReport !== "idle"}
                           >
-                            Upload
+                            {busyReport === "idle" ? "Upload" : busyLabel("report")}
                           </button>
 
                           <button
@@ -751,7 +757,7 @@ useEffect(() => {
                                       generateReport(r.name);
                                     }}
                                   >
-                                    Generate
+                                      {busyReport === "idle" ? "Generate" : busyLabel("report")}
                                   </button>
                                 ) : (
                                   <span>Generated</span>
@@ -866,7 +872,7 @@ useEffect(() => {
                             onClick={() => uploadFile("prices")}
                             disabled={busyPrices !== "idle"}
                           >
-                            Upload
+                            {busyPrices === "idle" ? "Upload" : busyLabel("prices")}
                           </button>
 
                           <button
@@ -918,7 +924,7 @@ useEffect(() => {
                                     generatePrices(r.name);
                                   }}
                                 >
-                                  Generate
+                                    {busyReport === "idle" ? "Generate" : busyLabel("report")}
                                 </button>
                               ) : (
                                 <span>Generated</span>
