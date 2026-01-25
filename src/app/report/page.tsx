@@ -461,7 +461,8 @@ const DATE_FMT = new Intl.DateTimeFormat("en-AU", {
   timeZone: "Australia/Sydney",
 });
 
-export function formatDate(iso: string) {
+
+function formatDate(iso: string) {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
   return DATE_FMT.format(d);
