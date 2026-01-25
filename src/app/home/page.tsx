@@ -475,7 +475,7 @@ export default function HomeDashboardPage() {
 
             <div className="glass-pro shadow-pro ring-soft rounded-[10px] p-6">
               <div className="mt-1 overflow-x-auto rounded-2xl bg-white/50 ring-soft">
-                <table className="min-w-full text-sm">
+                <table className="data-grid">
                   <thead className="text-left text-[11px] font-semibold text-slate-600">
                     <tr>
                       <th className="px-4 py-3">Date</th>
