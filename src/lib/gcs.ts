@@ -11,15 +11,61 @@ export function getBucketName(): string {
   return requireEnv("GCS_BUCKET");
 }
 
+function parseServiceAccountJsonFromEnvB64(b64: string) {
+  // allow accidental raw JSON too (starts with "{")
+  const jsonStr = b64.trim().startsWith("{")
+    ? b64.trim()
+    : Buffer.from(b64.trim(), "base64").toString("utf8").trim();
+
+  const json = JSON.parse(jsonStr) as any;
+
+  // common: private_key stored with escaped newlines in env var
+  if (typeof json.private_key === "string") {
+    json.private_key = json.private_key.replace(/\\n/g, "\n");
+  }
+
+  if (!json.client_email || !json.private_key) {
+    throw new Error("GOOGLE_APPLICATION_SA_JSON_B64 JSON missing client_email/private_key");
+  }
+
+  return {
+    projectId: json.project_id as string | undefined,
+    credentials: {
+      client_email: json.client_email as string,
+      private_key: json.private_key as string,
+    },
+  };
+}
+
+let _storage: Storage | null = null;
+
 export function getStorage(): Storage {
-  return new Storage({
-    keyFilename: requireEnv("GOOGLE_APPLICATION_CREDENTIALS"),
-  });
+  if (_storage) return _storage;
+
+  // 1) Preferred: service account JSON via base64 env var (production-safe)
+  const saB64 = process.env.GOOGLE_APPLICATION_SA_JSON_B64;
+  if (saB64 && saB64.trim()) {
+    const { projectId, credentials } = parseServiceAccountJsonFromEnvB64(saB64);
+    _storage = new Storage({ projectId, credentials });
+    return _storage;
+  }
+
+  // 2) Optional fallback: GOOGLE_APPLICATION_CREDENTIALS (file path / ADC)
+  // If you still set it (local dev or mounted in container), keep supporting it.
+  const keyFilename = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (keyFilename && keyFilename.trim()) {
+    _storage = new Storage({ keyFilename: keyFilename.trim() });
+    return _storage;
+  }
+
+  throw new Error(
+    "Missing GCS credentials. Set GOOGLE_APPLICATION_SA_JSON_B64 (recommended) or GOOGLE_APPLICATION_CREDENTIALS."
+  );
 }
 
 export function buildObjectPath(params: {
   commodity: string;
-  kind: string,
+  kind: string;
   filename: string;
   region?: string; // optional
 }) {
@@ -108,12 +154,6 @@ export async function listObjects(params: {
    NEW HELPERS (for "clean exists" + viewer signed URL)
    ============================================================================= */
 
-/**
- * Build the "clean" object path that mirrors buildObjectPath() layout.
- * Examples:
- *  - clean/sulphur/doc/report.pdf
- *  - clean/sulphur/doc/global/report.pdf
- */
 export function buildCleanObjectPath(params: {
   commodity: string;
   kind: "doc" | "price";
@@ -130,9 +170,6 @@ export function buildCleanObjectPath(params: {
     : `clean/${commodity}/${kind}/${safeFilename}`;
 }
 
-/**
- * Lightweight existence check (cheaper than headObject when you only need a boolean).
- */
 export async function objectExists(params: { objectName: string }): Promise<boolean> {
   const storage = getStorage();
   const bucketName = getBucketName();
@@ -141,10 +178,6 @@ export async function objectExists(params: { objectName: string }): Promise<bool
   return exists;
 }
 
-/**
- * Signed READ URL for viewer page (private bucket).
- * Use this to embed PDF in an iframe.
- */
 export async function createSignedReadUrl(params: { objectName: string; expiresMinutes: number }) {
   const storage = getStorage();
   const bucketName = getBucketName();
