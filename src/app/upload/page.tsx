@@ -178,6 +178,28 @@ export default function UploadPage() {
   const [msgReport, setMsgReport] = useState("");
   const [msgPrices, setMsgPrices] = useState("");
 
+    // Auto-hide messages after a short delay
+  useEffect(() => {
+    if (!msgReport) return;
+
+    const ok = msgReport.startsWith("✓") || msgReport.includes("triggered");
+    const ms = ok ? 4000 : 8000;
+
+    const t = window.setTimeout(() => setMsgReport(""), ms);
+    return () => window.clearTimeout(t);
+  }, [msgReport]);
+
+  useEffect(() => {
+    if (!msgPrices) return;
+
+    const ok = msgPrices.startsWith("✓") || msgPrices.includes("triggered");
+    const ms = ok ? 4000 : 8000;
+
+    const t = window.setTimeout(() => setMsgPrices(""), ms);
+    return () => window.clearTimeout(t);
+  }, [msgPrices]);
+
+
   const reportInputRef = useRef<HTMLInputElement | null>(null);
   const pricesInputRef = useRef<HTMLInputElement | null>(null);
 
