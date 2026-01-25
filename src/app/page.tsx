@@ -104,14 +104,16 @@ export default function HomePage() {
           <div className="glow-border" />
           <div className="login-card">
             <div className="login-card-head">
-              <Image
-                src="/logo.png"
-                alt="Commodity AI logo"
-                width={220}
-                height={110}
-                className="login-logo"
-                priority
-              />
+               <div className="login-logoRow">
+                <Image
+                  src="/logo.png"
+                  alt="Commodity AI logo"
+                  width={220}
+                  height={110}
+                  className="login-logo"
+                  priority
+                />
+              </div>
 
               <div className="header">
                 <h2 className="tt-login-companyRest">Cali Commodity Pulse</h2>
