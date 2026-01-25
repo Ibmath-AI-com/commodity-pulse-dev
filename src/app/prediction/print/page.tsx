@@ -1,10 +1,11 @@
 // FILE: src/app/prediction/print/page.tsx
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Printer, X } from "lucide-react";
+
+export const dynamic = "force-dynamic";
 
 type TenderOut = {
   tenderAction?: string;
