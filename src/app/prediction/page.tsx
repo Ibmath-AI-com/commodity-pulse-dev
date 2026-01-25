@@ -27,7 +27,6 @@ import {
   TextAlignCenter,
 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 type Status = "idle" | "loading" | "success" | "error";
 

@@ -1,6 +1,7 @@
 // FILE: src/app/layout.tsx
 import "./globals.css";
 import { Roboto, Roboto_Condensed } from "next/font/google";
+import AppSuspense from "@/components/app-suspense";
 
 const roboto = Roboto({
   subsets: ["latin"],
@@ -24,7 +25,9 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${roboto.variable} ${robotoCondensed.variable}`}>
-      <body className="tt-body">{children}</body>
+      <body className="tt-body">
+        <AppSuspense fallback={null}>{children}</AppSuspense>
+      </body>
     </html>
   );
 }

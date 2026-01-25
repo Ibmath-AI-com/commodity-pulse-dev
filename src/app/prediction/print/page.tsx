@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Printer, X } from "lucide-react";
 
-export const dynamic = "force-dynamic";
 
 type TenderOut = {
   tenderAction?: string;
