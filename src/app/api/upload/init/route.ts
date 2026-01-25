@@ -1,13 +1,10 @@
 // FILE: src/app/api/upload/init/route.ts
 import { NextResponse } from "next/server";
-import { buildObjectPath, createSignedUploadUrl } from "@/lib/gcs";
-import { Storage } from "@google-cloud/storage";
+import { buildObjectPath, createSignedUploadUrl, getStorage } from "@/lib/gcs";
 
 export const runtime = "nodejs";
 
 type Kind = "doc" | "rdata" | "general";
-
-const storage = new Storage();
 
 function kindFromContentType(contentType?: string): Kind {
   const ct = (contentType ?? "").toLowerCase().trim();
@@ -46,6 +43,7 @@ async function archiveExistingInFolder(opts: {
 }) {
   const { bucket, incomingDir, keepObjectName } = opts;
 
+  const storage = getStorage();
   const b = storage.bucket(bucket);
   const prefix = incomingDir.endsWith("/") ? incomingDir : `${incomingDir}/`;
 
@@ -63,28 +61,28 @@ async function archiveExistingInFolder(opts: {
     const archivedName = `archive/${rel}`;
 
     await b.file(name).copy(b.file(archivedName));
-    await b.file(name).delete(); // ✅ evacuate from incoming
+    await b.file(name).delete(); // evacuate from incoming
   }
 }
 
 /**
- * Delete everything under clean/<commodity>/doc/
+ * Delete everything under clean/<commodity>/<kind>/
  *
  * Example:
  *   clean/sulphur/doc/... -> (deleted)
  */
-async function wipeCleanCommodityDoc(opts: { bucket: string; commodity: string; kind: string}) {
+async function wipeCleanCommodityDoc(opts: { bucket: string; commodity: string; kind: string }) {
   const { bucket, commodity, kind } = opts;
 
+  const storage = getStorage();
   const b = storage.bucket(bucket);
-  const prefix = `clean/${String(commodity || "").trim().toLowerCase()}/${String(kind || "").trim().toLowerCase()}/`;
 
+  const prefix = `clean/${String(commodity || "").trim().toLowerCase()}/${String(kind || "").trim().toLowerCase()}/`;
   const [files] = await b.getFiles({ prefix });
 
   for (const f of files) {
     const name = f.name;
     if (!name || name.endsWith("/")) continue;
-
     await b.file(name).delete();
   }
 }
@@ -118,17 +116,17 @@ export async function POST(req: Request) {
     const kind = kindFromContentType(contentType);
     const expiresMinutes = Number(process.env.GCS_SIGNED_URL_EXPIRES_MIN ?? "15") || 15;
 
-    // build objectName (your buildObjectPath should already include "incoming/...")
+    // build objectName (buildObjectPath includes "incoming/...")
     const objectName = buildObjectPath({ commodity, kind, filename });
 
-    // create signed URL
+    // create signed URL (this uses getStorage() internally from your updated lib)
     const signed = await createSignedUploadUrl({
       objectName,
       contentType,
       expiresMinutes,
     });
 
-    // ✅ 1) Archive old files in the SAME incoming folder (incoming/<commodity>/<kind>/...)
+    // 1) Archive old files in the SAME incoming folder (incoming/<commodity>/<kind>/...)
     if (signed.objectName.startsWith("incoming/")) {
       const { dir } = splitPath(signed.objectName); // e.g. "incoming/sulphur/doc"
       await archiveExistingInFolder({
@@ -138,7 +136,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ✅ 2) Delete clean/<commodity>/doc/... (top-level sibling prefix)
+    // 2) Delete clean/<commodity>/<kind>/...
     await wipeCleanCommodityDoc({
       bucket: signed.bucket,
       commodity,
