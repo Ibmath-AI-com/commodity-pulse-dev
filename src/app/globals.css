@@ -2893,6 +2893,7 @@ body {
 .tt-btnDelete:hover {
   background: color-mix(in srgb, var(--tt-accent-red) 82%, #ffffff);
   border-color: color-mix(in srgb, var(--tt-accent-red) 88%, #ffffff);
+  color: #fff;
 }
 
 .tt-btnRefresh {
