@@ -473,10 +473,9 @@ export default function HomeDashboardPage() {
               </div>
             </div>
 
-            <div className="glass-pro shadow-pro ring-soft rounded-[10px] p-6">
-              <div className="mt-1 overflow-x-auto rounded-2xl bg-white/50 ring-soft">
+            <div className="tt-uploadTableWrap">
                 <table className="data-grid">
-                  <thead className="text-left text-[11px] font-semibold text-slate-600">
+                  <thead >
                     <tr>
                       <th className="px-4 py-3">Date</th>
                       <th className="px-4 py-3">Commodity</th>
@@ -531,7 +530,6 @@ export default function HomeDashboardPage() {
                   </tbody>
                 </table>
               </div>
-            </div>
           </section>
 
           {/* Details modal */}
