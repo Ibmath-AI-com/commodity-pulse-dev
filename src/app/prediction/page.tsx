@@ -317,7 +317,7 @@ export default function PredictionPage() {
   const [multi, setMulti] = useState<MultiItem[]>([]);
   const [activeIdx, setActiveIdx] = useState<number>(0);
 
-  const [justTab, setJustTab] = useState<"drivers" | "risk" | "evidence" | "cali">("drivers");
+  const [justTab, setJustTab] = useState<"drivers" | "risk" | "evidence" | "cali">("cali");
 
   const STORAGE_PREFIX = "prediction:lastResult:v2:";
   const MAX_CACHE_AGE_MS = 24 * 60 * 60 * 1000;
@@ -384,7 +384,7 @@ export default function PredictionPage() {
     setMulti([]);
     setActiveIdx(0);
 
-    setJustTab("drivers");
+    setJustTab("cali");
 
     setFutureDate("");
     setBasis(["middle-east"]);
@@ -608,7 +608,7 @@ export default function PredictionPage() {
 
     setFutureDate(cached.futureDate ?? "");
     setError(null);
-    setJustTab(cached.justTab ?? "drivers");
+    setJustTab(cached.justTab ?? "cali");
 
     setBasePricesByBasis(cached.basePricesByBasis ?? {});
 
@@ -816,7 +816,7 @@ export default function PredictionPage() {
       setActiveIdx(0);
       setBundle(items[0].bundle);
       setResult(items[0].result);
-      setJustTab("drivers");
+      setJustTab("cali");
       setStatus("success");
       return;
     }
@@ -826,7 +826,7 @@ export default function PredictionPage() {
 
     const mapped = mapPayloadToResult(payload);
     setResult(mapped);
-    setJustTab("drivers");
+    setJustTab("cali");
     setStatus("success");
   } catch (e: any) {
     setError(e?.message ?? "Unknown error");
