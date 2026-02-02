@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, Settings, LogOut, User } from "lucide-react";
 import { auth } from "@/lib/firebaseClient";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 
 const LS_COMMODITY = "ai_commodity_selected";
 
@@ -184,22 +184,29 @@ export function AppShell({ title, children }: { title?: string; children: React.
     };
   }, [userOpen]);
 
-  function hardLogout() {
-    try {
-      if (typeof window !== "undefined") {
-        for (const k of LOGOUT_KEYS) {
-          window.localStorage.removeItem(k);
-          window.sessionStorage.removeItem(k);
-        }
-        purgePredictionCache();
-        purgePrintCache();
-        clearAllCookies();
+ async function hardLogout() {
+  try {
+    setUserOpen(false);
+
+    // 1) clear server session cookie (httpOnly)
+    await fetch("/api/session/logout", { method: "POST" }).catch(() => {});
+
+    // 2) clear firebase client session
+    await signOut(auth).catch(() => {});
+
+    // 3) clear local caches (optional)
+    if (typeof window !== "undefined") {
+      for (const k of LOGOUT_KEYS) {
+        window.localStorage.removeItem(k);
+        window.sessionStorage.removeItem(k);
       }
-    } finally {
-      setUserOpen(false);
-      window.location.assign("/");
+      purgePredictionCache();
+      purgePrintCache();
     }
+  } finally {
+    window.location.assign("/login"); // go to login (or "/")
   }
+}
 
   const initials = useMemo(() => initialsFromEmailOrName(userEmail, userName), [userEmail, userName]);
 
@@ -210,33 +217,23 @@ export function AppShell({ title, children }: { title?: string; children: React.
 
   return (
     <div className="tt-terminal">
-      <header className="tt-header">
+      <header>
         {/* Top dark strip */}
-        <div className="tt-headerTop">
-          <div className="tt-brandSection">
-            <Link href="/" className="tt-logoContainer" aria-label="Home">
-              <div className="tt-brand">
-                <span className="tt-logoMark" aria-hidden="true">
-                  C
-                </span>
-                <span className="tt-companyRest pl-1">ommodity Pulse</span>
-              </div>
-            </Link>
 
-            {selectedCommodity ? (
-              <div className="tt-marketTicker">
-                <div className="tt-tickerItem">
-                  <span className="tt-tickerLabel">ACTIVE</span>
-                  <span className="tt-tickerValue tt-tickerUp">{titleCase(selectedCommodity)}</span>
-                </div>
-              </div>
-            ) : (
-              ""
-            )}
+        <div className="header-left">
+            <div className="logo">
+                <span>C</span> Commodity Pulse
+            </div>
+            <div className="status-pill">
+                ACTIVE <span className="separater">|</span> <span className="tt-tickerValue tt-tickerUp">{titleCase(selectedCommodity)}</span>
+            </div>
+            <div className="status-pill">Updated 2 mins ago</div>
+            <div className="status-pill">Region: <strong>Middle East</strong></div>
           </div>
 
+        <div className="header-right">
           <div className="tt-userSection">
-            <span className="tt-timeDisplay">{timeText}</span>
+            <span className="status-pill">{timeText}</span>
 
             <button className="tt-iconBtn" type="button" title="Notifications" aria-label="Notifications">
               <Bell className="tt-icon" />
@@ -307,8 +304,10 @@ export function AppShell({ title, children }: { title?: string; children: React.
           </div>
         </div>
 
+      
+      </header>
         {/* White nav row */}
-        <nav className="tt-nav">
+        <nav className="tt-nav ml-10">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -319,7 +318,6 @@ export function AppShell({ title, children }: { title?: string; children: React.
             </Link>
           ))}
         </nav>
-      </header>
 
       <main className="tt-main">
         {title ? <div className="tt-pageTitle">{title}</div> : null}
@@ -327,7 +325,7 @@ export function AppShell({ title, children }: { title?: string; children: React.
       </main>
 
       <footer className="tt-footer">
-        © {new Date().getFullYear()} Commodity Pulse | Market data delayed by 15 minutes | For professional use only
+© {now.getFullYear()} Commodity Pulse | Market data delayed by 15 minutes | For professional use only
       </footer>
     </div>
   );

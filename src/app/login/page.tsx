@@ -1,6 +1,5 @@
-//aicommodity\src\app\page.tsx
+// FILE: aicommodity/src/app/page.tsx
 "use client";
-
 
 import Image from "next/image";
 import { useMemo, useState } from "react";
@@ -11,7 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "fire
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseClient";
 
-const LS_COMMODITY = "ai_commodity_selected"; 
+const LS_COMMODITY = "ai_commodity_selected";
 
 export default function HomePage() {
   const router = useRouter();
@@ -44,18 +43,12 @@ export default function HomePage() {
     );
   }
 
- async function handleAuth() {
+async function handleAuth() {
   const e = email.trim();
   const p = password;
 
   setErr(null);
   setBusy(true);
-
-  console.log("HANDLE AUTH START", {
-    apiKey: auth.app.options.apiKey,
-    authDomain: auth.app.options.authDomain,
-    projectId: auth.app.options.projectId,
-  });
 
   const withTimeout = <T,>(promise: Promise<T>, ms = 12000) =>
     Promise.race([
@@ -71,16 +64,31 @@ export default function HomePage() {
 
     const cred = await withTimeout(authPromise, 12000);
 
-    console.log("SIGNED IN", cred.user.uid);
-
-    // Do NOT block login on Firestore write while debugging
+    // (optional) upsert in Firestore
     upsertUser(cred.user.uid, cred.user.email || e).catch((er) =>
       console.warn("upsertUser failed:", er?.code || er?.message || er)
     );
 
-      localStorage.setItem(LS_COMMODITY, commodity);
-      window.dispatchEvent(new Event("ai:commodity"));
-      router.push("/home");
+    // ✅ create server session cookie (critical for protecting routes)
+    const idToken = await cred.user.getIdToken();
+
+    const r = await fetch("/api/session/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
+
+    if (!r.ok) {
+      const j = await r.json().catch(() => null);
+      throw new Error(j?.error || "Failed to create session.");
+    }
+
+    // keep your commodity selection
+    localStorage.setItem(LS_COMMODITY, commodity);
+    window.dispatchEvent(new Event("ai:commodity"));
+
+    // ✅ now safe to enter protected area
+    router.push("/home");
   } catch (ex: any) {
     console.error("AUTH FAILED:", ex?.code, ex?.message, ex);
 
@@ -95,16 +103,37 @@ export default function HomePage() {
 }
 
 
+  function handleHome() {
+    router.push("/");
+  }
+
   return (
-    <div style={{ background: "transparent", minHeight: "100vh" }}>
+    <div style={{ background: "transparent", minHeight: "100vh", position: "relative" }}>
       <LoginBackground />
+
+      {/* Home button (top-right) */}
+      <button type="button" onClick={handleHome} aria-label="Go to home" className="lp-home-btn">
+        <svg
+          className="lp-home-ico"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M3 10.5L12 3l9 7.5" />
+          <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
+        </svg>
+        Home
+      </button>
 
       <div className="login-container">
         <div className="login-card-wrapper">
           <div className="glow-border" />
           <div className="login-card">
             <div className="login-card-head">
-
               <div className="header">
                 <h2 className="tt-login-companyRest">Commodity Pulse</h2>
               </div>
@@ -114,7 +143,7 @@ export default function HomePage() {
               className="form"
               onSubmit={(ev) => {
                 ev.preventDefault();
-                console.log("FORM SUBMIT", { isValid, busy }); 
+                console.log("FORM SUBMIT", { isValid, busy });
                 if (!isValid || busy) return;
                 void handleAuth();
               }}
@@ -163,7 +192,6 @@ export default function HomePage() {
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
-
             </form>
 
             <p className="feature-text">
@@ -173,7 +201,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <p className="footer">Powered by Cali Agricultural </p>
+        <p className="footer">Powered by Commodity Pules</p>
       </div>
     </div>
   );

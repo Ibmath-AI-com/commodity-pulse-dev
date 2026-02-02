@@ -1,9 +1,73 @@
-.env
-.env.*
-!.env.example
-
-keys/
+# dependencies
 node_modules/
+
+# next.js
 .next/
 out/
+dist/
+build/
 .vercel/
+.turbo/
+
+# env / secrets
+.env
+.env.*
+**/*serviceAccount*.json
+**/*firebase-admin*.json
+**/*google*.json
+**/*gcp*.json
+**/*.pem
+**/*.p12
+**/*.key
+**/*.crt
+**/*private_key*
+**/*credentials*
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# caches
+.eslintcache
+.tsbuildinfo
+.swc/
+.cache/
+coverage/
+
+# firebase local
+.firebase/
+firebase-debug.log*
+ui-debug.log*
+
+# n8n local data (if present)
+.n8n/
+n8n-data/
+**/*.sqlite
+**/*.sqlite3
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# project generated artifacts (adjust to your folders)
+incoming/
+archive/
+clean/
+reports/
+output/
+tmp/
+
+# local keys (never commit)
+keys/
+*.secret
+*.secrets
+*.pem
+*.p12
+*.pfx
+*.key
