@@ -19,6 +19,7 @@ type ReportListItem = {
   objectName: string;      // incoming/... or archive/...
   cleanObjectName: string; // clean/.../<base>.json
   hasClean: boolean;
+  generatedBy: string;     // "system" or email
 };
 
 function fileNameOnly(p: string) {
@@ -96,6 +97,9 @@ export async function GET() {
         (meta?.timeCreated as string) ||
         new Date().toISOString();
 
+      // Try to get generatedBy from custom metadata, default to "system"
+      const generatedBy = (meta?.metadata as any)?.generatedBy || "system";
+
       return {
         id: `${source}:${commodity}:${fileNameOnly(objectName)}`,
         createdAt,
@@ -107,6 +111,7 @@ export async function GET() {
         objectName,
         cleanObjectName,
         hasClean,
+        generatedBy,
       };
     });
 

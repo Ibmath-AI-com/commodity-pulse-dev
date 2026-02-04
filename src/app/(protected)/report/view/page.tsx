@@ -169,7 +169,7 @@ export default function ReportViewPage() {
   const sp = useSearchParams();
   const objectName = useMemo(() => (sp.get("objectName") ?? "").trim(), [sp]);
 
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(true);
   const [err, setErr] = useState<string>("");
   const [data, setData] = useState<ReadResp | null>(null);
 
